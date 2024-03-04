@@ -6,7 +6,7 @@ class ApiError extends Error {
         errors=[]
     ){
         super(message)
-        this.message = message
+        this.message = message // redundant
         this.statusCode = statusCode
         this.success = false
         this.errors = errors
