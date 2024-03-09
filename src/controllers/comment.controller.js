@@ -9,6 +9,14 @@ const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const { videoId } = req.params;
     const { page = 1, limit = 10 } = req.query;
+
+    if (page < 1) {
+        page = 1;
+    }
+    if (limit < 1) {
+        limit = 10;
+    }
+
     const start = (page - 1) * limit;
 
     const isPresent = await Video.findById(videoId);
