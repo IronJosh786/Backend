@@ -27,7 +27,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
-                as: "owner",
+                as: "commentor",
                 pipeline: [
                     {
                         $project: {
@@ -41,7 +41,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
         {
             $addFields: {
                 owner: {
-                    $first: "$owner",
+                    $first: "$commentor",
                 },
             },
         },
