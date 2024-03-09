@@ -40,7 +40,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
         },
         {
             $addFields: {
-                owner: {
+                commentor: {
                     $first: "$commentor",
                 },
             },
