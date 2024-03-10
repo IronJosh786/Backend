@@ -105,35 +105,35 @@ Before setting up the project, ensure you have the following installed:
 
 1. Users
 
-User model for authentication and profile management.
+-   User model for authentication and profile management.
 
 2. Videos
 
-Model to store information about uploaded videos.
+-   Model to store information about uploaded videos.
 
 3. Likes
 
-Model for tracking likes on videos.
+-   Model for tracking likes on videos.
 
 4. Comments
 
-Model to store comments on videos.
+-   Model to store comments on videos.
 
 5. Tweets
 
-Model for tweets related to video content.
+-   Model for tweets related to video content.
 
 6. Subscriptions
 
-Model to manage user subscriptions to channels.
+-   Model to manage user subscriptions to channels.
 
 7. Dashboards
 
-Model for user dashboards, aggregating content from subscribed channels.
+-   Model for user dashboards, aggregating content from subscribed channels.
 
 8. Playlists
 
-Model for creating and managing user playlists.
+-   Model for creating and managing user playlists.
 
 ## License
 
