@@ -17,18 +17,20 @@ const getAllVideos = asyncHandler(async (req, res) => {
         limit = 10;
     }
 
-    if (!isValidObjectId(userId)) {
+    if (userId && !isValidObjectId(new mongoose.Types.ObjectId(userId))) {
         throw new ApiError(400, "Invalid userId");
     }
 
-    const isUserValid = await User.findById(userId);
+    const isUserValid = await User.findById(
+        new mongoose.Types.ObjectId(userId)
+    );
 
     const start = (page - 1) * limit;
 
     let matchStage = {};
     if (isUserValid && query?.trim()) {
         matchStage["$match"] = {
-            owner: userId,
+            owner: new mongoose.Types.ObjectId(isUserValid._id),
             $or: [
                 { title: { $regex: query, $options: "i" } },
                 { description: { $regex: query, $options: "i" } },
@@ -36,7 +38,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         };
     } else if (isUserValid) {
         matchStage["$match"] = {
-            owner: userId,
+            owner: new mongoose.Types.ObjectId(isUserValid._id),
         };
     } else if (query?.trim()) {
         matchStage["$match"] = {
@@ -50,12 +52,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 
     let sortStage = {};
-    if (sortBy && sortType) {
+    if (sortBy?.trim() && sortType?.trim()) {
         sortStage["$sort"] = {
             [sortBy]: sortType === "asc" ? 1 : -1,
         };
     } else {
-        sortStage["$sort"] = {};
+        sortStage["$sort"] = {
+            createdAt: 1,
+        };
     }
 
     const videos = await Video.aggregate([
@@ -104,7 +108,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
             $skip: start,
         },
         {
-            $limit: limit,
+            $limit: parseInt(limit),
         },
     ]);
 
@@ -190,7 +194,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     const video = await Video.aggregate([
         {
             $match: {
-                _id: videoId,
+                _id: new mongoose.Types.ObjectId(videoId),
             },
         },
         {
@@ -229,13 +233,15 @@ const updateVideo = asyncHandler(async (req, res) => {
     //TODO: update video details like title, description, thumbnail
 
     const { title, description } = req.body;
-    const { thumbnail } = req.file?.path;
+    const { thumbnail } = req.file ? req.file.path : "";
 
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid videoId");
     }
 
-    const video = await Video.findOne({ _id: videoId });
+    const video = await Video.findOne({
+        _id: new mongoose.Types.ObjectId(videoId),
+    });
 
     if (!video) {
         throw new ApiError(400, "Video not found");

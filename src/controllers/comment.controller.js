@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comment.model.js";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -10,16 +10,22 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    if (page < 1) {
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId");
+    }
+
+    if (!page || page < 1) {
         page = 1;
     }
-    if (limit < 1) {
+    if (!limit || limit < 1) {
         limit = 10;
     }
 
     const start = (page - 1) * limit;
 
-    const isPresent = await Video.findById(videoId);
+    const isPresent = await Video.findById(
+        new mongoose.Types.ObjectId(videoId)
+    );
     if (!isPresent) {
         throw new ApiError(400, "Video not found");
     }
@@ -27,7 +33,27 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const videoComment = await Comment.aggregate([
         {
             $match: {
-                video: videoId,
+                video: isPresent._id,
+            },
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "comment",
+                as: "commentLikes",
+            },
+        },
+        {
+            $addFields: {
+                likesOnThisComment: {
+                    $size: "$commentLikes",
+                },
+            },
+        },
+        {
+            $project: {
+                commentLikes: 0,
             },
         },
         {
@@ -57,7 +83,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
             $skip: start,
         },
         {
-            $limit: limit,
+            $limit: parseInt(limit),
         },
     ]);
 

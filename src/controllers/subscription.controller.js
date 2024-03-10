@@ -8,16 +8,168 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
     // TODO: toggle subscription
+
+    if (!isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channelId");
+    }
+
+    const id = new mongoose.Types.ObjectId(channelId);
+
+    const isSubscribed = await Subscription.findOne({
+        channel: channelId,
+        subscriber: req.user?._id,
+    });
+
+    if (isSubscribed) {
+        const unsubscribed = await Subscription.findByIdAndDelete(
+            isSubscribed._id
+        );
+
+        if (!unsubscribed) {
+            throw new ApiError(500, "Could not unsubscribe the channel");
+        }
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    unsubscribed,
+                    "Channel unsubscribed successfully"
+                )
+            );
+    } else {
+        const subscribed = await Subscription.create({
+            channel: id,
+            subscriber: req.user?._id,
+        });
+
+        if (!subscribed) {
+            throw new ApiError(500, "Could not subscribe the channel");
+        }
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    subscribed,
+                    "Channel subscribed successfully"
+                )
+            );
+    }
 });
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
+
+    const id = new mongoose.Types.ObjectId(channelId);
+
+    if (!isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channelId");
+    }
+
+    const userExists = await User.findById(id);
+    if (!userExists) {
+        throw new ApiError(400, "Channel does not exits");
+    }
+
+    const subscribers = await Subscription.aggregate([
+        {
+            $match: {
+                channel: id,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "subscriber",
+                foreignField: "_id",
+                as: "subscriberDetails",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            avatar: 1,
+                        },
+                    },
+                ],
+            },
+        },
+    ]);
+
+    if (!subscribers?.length) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "No subscribers to show"));
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                subscribers,
+                "Fetched subscribers successfully"
+            )
+        );
 });
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
     const { subscriberId } = req.params;
+
+    if (!isValidObjectId(subscriberId)) {
+        throw new ApiError(400, "Invalid subscriberId");
+    }
+
+    const id = new mongoose.Types.ObjectId(subscriberId);
+
+    const userExists = await User.findById(id);
+    if (!userExists) {
+        throw new ApiError(400, "User does not exits");
+    }
+
+    const channels = await Subscription.aggregate([
+        {
+            $match: {
+                subscriber: id,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "channel",
+                foreignField: "_id",
+                as: "channelDetails",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            avatar: 1,
+                        },
+                    },
+                ],
+            },
+        },
+    ]);
+
+    if (!channels?.length) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "No subscribed channels"));
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                channels,
+                "Fetched subscribed channels successfully"
+            )
+        );
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };

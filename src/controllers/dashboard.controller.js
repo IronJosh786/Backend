@@ -34,8 +34,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
             },
         },
         {
-            $unset: {
-                likesOnVideo: 1,
+            $project: {
+                likesOnVideo: 0,
             },
         },
         {
@@ -62,9 +62,9 @@ const getChannelStats = asyncHandler(async (req, res) => {
         },
     ]);
 
-    if (!allVideoDetails?.length) {
-        throw new ApiError(400, "Channel not found");
-    }
+    // if (!allVideoDetails?.length) {
+    //     throw new ApiError(400, "Nothing to show here");
+    // }
 
     const allDetails = {
         subscriberCount,
@@ -134,7 +134,9 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     ]);
 
     if (!videos?.length) {
-        throw new ApiError(400, "No videos to show");
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "No videos to show"));
     }
 
     return res

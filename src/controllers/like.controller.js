@@ -39,7 +39,9 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .json(200, newVideoLike, "Video liked successfully");
+            .json(
+                new ApiResponse(200, newVideoLike, "Video liked successfully")
+            );
     } else {
         // toggle like for the given video
         const deletedLike = await Like.findByIdAndDelete(isVideoLiked._id);
@@ -51,9 +53,11 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
         return res
             .status(200)
             .json(
-                200,
-                deletedLike,
-                "Toggled the like for the video successfully"
+                new ApiResponse(
+                    200,
+                    deletedLike,
+                    "Toggled the like for the video successfully"
+                )
             );
     }
 });
@@ -90,7 +94,13 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .json(200, newCommentLike, "Comment liked successfully");
+            .json(
+                new ApiResponse(
+                    200,
+                    newCommentLike,
+                    "Comment liked successfully"
+                )
+            );
     } else {
         // toggle like for the given comment
         const deletedLike = await Like.findByIdAndDelete(isCommentLiked._id);
@@ -102,9 +112,11 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         return res
             .status(200)
             .json(
-                200,
-                deletedLike,
-                "Toggled the like for the comment successfully"
+                new ApiResponse(
+                    200,
+                    deletedLike,
+                    "Toggled the like for the comment successfully"
+                )
             );
     }
 });
@@ -141,7 +153,9 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .json(200, newTweetLike, "Tweet liked successfully");
+            .json(
+                new ApiResponse(200, newTweetLike, "Tweet liked successfully")
+            );
     } else {
         // toggle like for the given tweet
         const deletedLike = await Like.findByIdAndDelete(isTweetLiked._id);
@@ -153,9 +167,11 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
         return res
             .status(200)
             .json(
-                200,
-                deletedLike,
-                "Toggled the like for the tweet successfully"
+                new ApiResponse(
+                    200,
+                    deletedLike,
+                    "Toggled the like for the tweet successfully"
+                )
             );
     }
 });
