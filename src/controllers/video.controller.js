@@ -23,14 +23,40 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     const isUserValid = await User.findById(userId);
 
-    if (!isUserValid) {
-        userId = "";
-    }
-
     const start = (page - 1) * limit;
 
     let matchStage = {};
+    if (isUserValid && query?.trim()) {
+        matchStage["$match"] = {
+            owner: userId,
+            $or: [
+                { title: { $regex: query, $options: "i" } },
+                { description: { $regex: query, $options: "i" } },
+            ],
+        };
+    } else if (isUserValid) {
+        matchStage["$match"] = {
+            owner: userId,
+        };
+    } else if (query?.trim()) {
+        matchStage["$match"] = {
+            $or: [
+                { title: { $regex: query, $options: "i" } },
+                { description: { $regex: query, $options: "i" } },
+            ],
+        };
+    } else {
+        matchStage["$match"] = {};
+    }
+
     let sortStage = {};
+    if (sortBy && sortType) {
+        sortStage["$sort"] = {
+            [sortBy]: sortType === "asc" ? 1 : -1,
+        };
+    } else {
+        sortStage["$sort"] = {};
+    }
 
     const videos = await Video.aggregate([
         matchStage,
